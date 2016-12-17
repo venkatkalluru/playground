@@ -7,6 +7,21 @@ import (
 	"os"
 )
 
+type App struct {
+	Name    string
+	Parents []string
+}
+
+type Group struct {
+	Id   string
+	Apps []App
+}
+
+type Config struct {
+	Id     string
+	Groups []Group
+}
+
 func main() {
 	numArgs := os.Args
 	if len(numArgs) < 2 {
@@ -14,36 +29,28 @@ func main() {
 		return
 	}
 	fileName := os.Args[1]
-	dataMap, err := readJSONFile(fileName)
+	c, err := readJSONFile(fileName)
 	if err != nil {
 		fmt.Println("Got error", err)
 		return
 	}
-	groups := dataMap["groups"]
-	if groups == nil {
-		fmt.Println("Empty groups, hence returing")
-		return
-	}
-
-	for _, group := range groups.([]interface{}) {
-		groupMap := group.(map[string]interface{})
-		fmt.Println("Group id is ", groupMap["id"])
-	}
+	fmt.Println(c.Id)
+	fmt.Println(c.Groups)
 }
 
-func readJSONFile(fileName string) (map[string]interface{}, error) {
+func readJSONFile(fileName string) (Config, error) {
 
+	var c Config
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		fmt.Println("Error reading file", fileName)
-		return nil, err
+		return c, err
 	}
 	//fmt.Println("Data is ", string(data))
-	var intf interface{}
-	err = json.Unmarshal(data, &intf)
+	err = json.Unmarshal(data, &c)
 	if err != nil {
 		fmt.Println("Error during unmarshalling json ", err)
-		return nil, err
+		return c, err
 	}
-	return intf.(map[string]interface{}), nil
+	return c, nil
 }
