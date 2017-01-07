@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+    "strings"
 )
 
 type App struct {
@@ -34,8 +35,66 @@ func main() {
 		fmt.Println("Got error", err)
 		return
 	}
-	fmt.Println(c.Id)
-	fmt.Println(c.Groups)
+	//printAppAndParents(&c)
+    
+    if len(c.Groups) == 0 {
+        fmt.Println("Empty Groups")
+        return
+    }
+    for _, g := range c.Groups {
+
+        sortedAppNames := topoSort(g.Apps)
+
+        fmt.Println("Sorted Apps for group ", g.Id)
+        for _, name := range sortedAppNames {
+            fmt.Println(name)
+        }
+        fmt.Println("--------------")
+    }
+}
+
+func topoSort(apps []App) []string {
+
+    appsMap := make(map[string]App, len(apps))
+
+    for _, app := range apps {
+        appsMap[app.Name] = app
+    }
+
+    visitedApps := make(map[string]bool, len(apps))
+    sortedAppNames := make([]string, 0, len(apps))
+    for _, app := range apps {
+
+        sortedAppNames = recurTopoSort(app, appsMap, visitedApps, sortedAppNames)
+    }
+    for _, name := range sortedAppNames {
+        fmt.Println(name)
+    }
+
+    return sortedAppNames
+}
+
+func recurTopoSort(app App, appsMap map[string]App, visitedApps map[string]bool, sortedAppNames []string) []string {
+
+    for _, p := range app.Parents {
+       if !visitedApps[p] {
+            recurTopoSort(appsMap[p], appsMap, visitedApps, sortedAppNames)
+        } 
+    }
+    if !visitedApps[app.Name] {
+        visitedApps[app.Name] = true
+        sortedAppNames = append(sortedAppNames, app.Name)
+    }
+    return sortedAppNames
+}
+
+func printAppAndParents(c *Config) {
+	for _, g := range c.Groups {
+		for _, a := range g.Apps {
+			fmt.Printf("%s : ", a.Name)
+			fmt.Println(a.Parents)
+		}
+	}
 }
 
 func readJSONFile(fileName string) (Config, error) {
