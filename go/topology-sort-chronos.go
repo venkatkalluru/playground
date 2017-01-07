@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-    "strings"
 )
 
 type App struct {
@@ -36,56 +35,55 @@ func main() {
 		return
 	}
 	//printAppAndParents(&c)
-    
-    if len(c.Groups) == 0 {
-        fmt.Println("Empty Groups")
-        return
-    }
-    for _, g := range c.Groups {
 
-        sortedAppNames := topoSort(g.Apps)
+	if len(c.Groups) == 0 {
+		fmt.Println("Empty Groups")
+		return
+	}
+	for _, g := range c.Groups {
 
-        fmt.Println("Sorted Apps for group ", g.Id)
-        for _, name := range sortedAppNames {
-            fmt.Println(name)
-        }
-        fmt.Println("--------------")
-    }
+		sortedAppNames := topoSort(g.Apps)
+
+		fmt.Println("Sorted Apps for group ", g.Id)
+		for _, name := range sortedAppNames {
+			fmt.Println(name)
+		}
+		fmt.Println("--------------")
+	}
 }
 
 func topoSort(apps []App) []string {
 
-    appsMap := make(map[string]App, len(apps))
+	appsMap := make(map[string]App, len(apps))
 
-    for _, app := range apps {
-        appsMap[app.Name] = app
-    }
+	for _, app := range apps {
+		appsMap[app.Name] = app
+	}
 
-    visitedApps := make(map[string]bool, len(apps))
-    sortedAppNames := make([]string, 0, len(apps))
-    for _, app := range apps {
+	visitedApps := make(map[string]bool, len(apps))
+	sortedAppNames := make([]string, 0, len(apps))
+	for _, app := range apps {
 
-        sortedAppNames = recurTopoSort(app, appsMap, visitedApps, sortedAppNames)
-    }
-    for _, name := range sortedAppNames {
-        fmt.Println(name)
-    }
+		sortedAppNames = recurTopoSort(app, appsMap, visitedApps, sortedAppNames)
+	}
 
-    return sortedAppNames
+	return sortedAppNames
 }
 
 func recurTopoSort(app App, appsMap map[string]App, visitedApps map[string]bool, sortedAppNames []string) []string {
 
-    for _, p := range app.Parents {
-       if !visitedApps[p] {
-            recurTopoSort(appsMap[p], appsMap, visitedApps, sortedAppNames)
-        } 
-    }
-    if !visitedApps[app.Name] {
-        visitedApps[app.Name] = true
-        sortedAppNames = append(sortedAppNames, app.Name)
-    }
-    return sortedAppNames
+	for _, p := range app.Parents {
+
+		if !visitedApps[p] {
+			sortedAppNames = recurTopoSort(appsMap[p], appsMap, visitedApps, sortedAppNames)
+			visitedApps[p] = true
+		}
+	}
+	if !visitedApps[app.Name] {
+		visitedApps[app.Name] = true
+		sortedAppNames = append(sortedAppNames, app.Name)
+	}
+	return sortedAppNames
 }
 
 func printAppAndParents(c *Config) {
